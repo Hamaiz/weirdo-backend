@@ -48,10 +48,11 @@ const productSchema = new mongoose.Schema(
       type: String,
     },
     gallery: [
-      {
-        image: String,
-        imageId: String,
-      },
+      String,
+      // {
+      // image: String,
+      // imageId: String,
+      // },
     ],
   },
   { timestamps: true }

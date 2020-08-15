@@ -9,6 +9,7 @@ cloudinary.config()
 // Models
 const User = require('../models/User')
 const Product = require('../models/Product')
+const Seller = require('../models/Seller')
 
 router.post('/imageUpload', async (req, res) => {
   const { data } = req.files.file
@@ -71,6 +72,88 @@ router.get('/customer/get-product', async (req, res) => {
     res.status(200).json(product)
   } else {
     res.sendStatus(404)
+  }
+})
+
+router.get('/get-item/:item', async (req, res, next) => {
+  if (req.header('weirdo-item-product')) {
+    try {
+      const { item } = req.params
+      const { page } = req.query
+      const skipItems = Number(page) === 1 ? 0 : (page - 1) * 50
+
+      // Count
+      const count = await Product.find().countDocuments()
+
+      // Get Product
+      const product = await Product.find()
+        .regex('keywords', new RegExp(item, 'i'))
+        .select('-user')
+        .sort('-updatedAt')
+        .skip(skipItems)
+        .limit(50)
+        .exec()
+
+      const response = {
+        totalPages: Math.ceil(count / 50),
+        page: page ? Number(page) : 1,
+        items: product,
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      res.sendStatus(404)
+    }
+  } else {
+    const error = new Error('Unauthorized')
+    res.status(404)
+    next(error)
+  }
+})
+
+router.get('/get-single-item/:slug', async (req, res, next) => {
+  if (req.header('weirdo-item-specific-product')) {
+    try {
+      const { slug } = req.params
+
+      // Get Product
+      const product = await Product.findOne({ slug })
+      const seller = await Seller.findOne({ user: product.user })
+        .select('-phone')
+        .select('-address')
+        .select('-__enc_phone')
+        .select('-__enc_address')
+
+      const response = {
+        product,
+        seller,
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      res.sendStatus(404)
+    }
+  } else {
+    const error = new Error('Unauthorized')
+    res.status(404)
+    next(error)
+  }
+})
+
+router.get('/get-latest-item', async (req, res, next) => {
+  if (req.header('weirdo-item-product')) {
+    try {
+      // Get Product
+      const product = await Product.find().limit(9).sort('-createdAt')
+
+      res.status(200).json(product)
+    } catch (error) {
+      res.sendStatus(404)
+    }
+  } else {
+    const error = new Error('Unauthorized')
+    res.status(404)
+    next(error)
   }
 })
 
