@@ -1,5 +1,15 @@
 const mongoose = require('mongoose')
 
+const galleryItem =
+  process.env.NODE_ENV !== 'production'
+    ? [String]
+    : [
+        {
+          image: String,
+          imageId: String,
+        },
+      ]
+
 const productSchema = new mongoose.Schema(
   {
     user: {
@@ -47,13 +57,7 @@ const productSchema = new mongoose.Schema(
     imageId: {
       type: String,
     },
-    gallery: [
-      // String,
-      {
-        image: String,
-        imageId: String,
-      },
-    ],
+    gallery: galleryItem,
   },
   { timestamps: true }
 )
